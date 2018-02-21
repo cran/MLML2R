@@ -1,8 +1,11 @@
-## ----setup, include = FALSE----------------------------------------------
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+## ----setup, include = FALSE,eval=FALSE-----------------------------------
+#  knitr::opts_chunk$set(
+#    collapse = TRUE,
+#    comment = "#>"
+#  )
+
+## ----style, echo = FALSE, results = 'asis'-------------------------------
+BiocStyle::markdown()
 
 ## ----eval=FALSE,message=FALSE--------------------------------------------
 #  library(MLML2R)
@@ -51,16 +54,16 @@ knitr::opts_chunk$set(
 #  UnMethylatedOxBS <- getUnmeth(MSet.noob)[,c(7,8,2,4)]
 
 ## ----eval=FALSE----------------------------------------------------------
-#  results_exactPD1 <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
+#  results_exact <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
 #                        L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS)
 
 ## ----eval=FALSE----------------------------------------------------------
-#  results_emPD1 <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
+#  results_em <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
 #                     L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS,
 #                     iterative = TRUE)
 
 ## ----echo=TRUE,eval=FALSE------------------------------------------------
-#  all.equal(results_exactPD1$hmC,results_emPD1$hmC,scale=1)
+#  all.equal(results_exact$hmC,results_em$hmC,scale=1)
 
 ## ----echo=FALSE,eval=FALSE-----------------------------------------------
 #  load("../data-raw/example1/results_exact.rds")
