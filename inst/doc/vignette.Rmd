@@ -41,7 +41,6 @@ The function \Rfunction{MLML} takes as input the data from the different methods
 
 The function assumes that the order of the rows and columns in the input matrices are consistent. In addition, all the input matrices must have the same dimension. Usually, rows represent CpG loci and columns are the samples.
 
-
 Arguments           |       Description      
 --------------------|----------------------------------------------------
 \Robject{G.matrix}  | Unmethylated channel (Converted cytosines/ T counts) from  TAB-conversion (reflecting 5-C + 5-mC). 
@@ -51,8 +50,6 @@ Arguments           |       Description
 \Robject{T.matrix}	| Methylated channel (Unconverted cytosines/ C counts) from  standard BS-conversion (reflecting 5-mC+5-hmC). 
 \Robject{U.matrix}	| Unmethylated channel (Converted cytosines/ T counts) from standard BS-conversion (reflecting True 5-C). 
 : `MLML` function and random variable notation.
-
-
 
 Value | Description
 ------|------------------
@@ -65,14 +62,14 @@ Value | Description
 
 # Worked examples
 
-## Publicly available data: GSE63179
+## Publicly available data: oxBS and BS methods
 
 We will use the dataset from @10.1371/journal.pone.0118202, which consists of eight DNA samples from the same DNA source treated with oxBS-BS and hybridized to the Infinium 450K array.
 
 When data is obtained through Infinium Methylation arrays, we recommend the use of the \Biocpkg{minfi} package [@minfi], a well-established tool for reading, preprocessing and analysing DNA methylation data from these platforms. Although our example relies on \Biocpkg{minfi} and other \Bioconductor{} tools, \CRANpkg{MLML2R} does not depend on any packages. Thus, the user is free to read and preprocess the data using any software of preference and then import the intensities (or $T$ and $C$ counts) for the methylated and unmethylated channel (or converted and uncoverted cytosines) into \R{} in matrix format.
 
 To start this example we will need the following packages:
-```{r,eval=FALSE,message=FALSE}
+```{r packages,eval=TRUE,message=FALSE}
 library(MLML2R)
 library(minfi)
 library(GEOquery)
@@ -83,7 +80,7 @@ It is usually best practice to start the analysis from the raw data, which in th
 
 The raw files are deposited in GEO and can be downloaded by using the \Rfunction{getGEOSuppFiles}. There are two files for each replicate, since the 450k array is a two-color array. The \verb|.IDAT| files are downloaded in compressed format and need to be uncompressed before they are read by the \Rfunction{read.metharray.exp} function.
 
-```{r,eval=FALSE}
+```{r getData1,eval=FALSE}
 getGEOSuppFiles("GSE63179")
 untar("GSE63179/GSE63179_RAW.tar", exdir = "GSE63179/idat")
 
@@ -93,12 +90,8 @@ sapply(files, gunzip, overwrite = TRUE)
 ```
 
 The \verb|.IDAT| files can now be read:
-```{r,eval=FALSE}
+```{r readData1,eval=FALSE}
 rgSet <- read.metharray.exp("GSE63179/idat")
-```
-
-```{r,eval=FALSE,echo=FALSE}
-rgSet <- read.metharray.exp("../data-raw/example1/GSE63179/idat")
 ```
 
 To access phenotype data we use the \Rfunction{pData} function. The phenotype data is not yet available from the \Robject{rgSet}.
@@ -106,9 +99,19 @@ To access phenotype data we use the \Rfunction{pData} function. The phenotype da
 pData(rgSet)
 ```
 In this example the phenotype is not really relevant, since we have only one sample: male, 25 years old. What we do need is the information about the conversion method used in each replicate: BS or oxBS. We will access this information automatically from GEO:
-```{r,eval=FALSE}
-geoMat <- getGEO("GSE63179")
-pD.all <- pData(geoMat[[1]])
+```{r getPheno1,eval=FALSE}
+if (!file.exists("GSE63179/GSE63179_series_matrix.txt.gz"))
+download.file(
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63179/matrix/GSE63179_series_matrix.txt.gz",
+  "GSE63179/GSE63179_series_matrix.txt.gz")
+
+geoMat <- getGEO(filename="GSE63179/GSE63179_series_matrix.txt.gz",getGPL=FALSE)
+pD.all <- pData(geoMat)
+
+#Another option
+#geoMat <- getGEO("GSE63179")
+#pD.all <- pData(geoMat[[1]])
+
 pD <- pD.all[, c("title", "geo_accession", "characteristics_ch1.1",
                  "characteristics_ch1.2","characteristics_ch1.3")]
 pD
@@ -129,7 +132,7 @@ rgSet
 The \Robject{rgSet} object is a class called \Rclass{RGChannelSet} used for two color data (green and a red channel). The input in the \Rfunction{MLML} funcion is  \Rclass{MethylSet}, which contains the methylated and unmethylated signals. The most basic way to construct a \Rclass{MethylSet} is  using the function \Rfunction{preprocessRaw}. Here we chose the function \Rfunction{preprocessNoob} [@noob] for background correction and construction of the \Rclass{MethylSet}.
 
 
-```{r,eval=FALSE}
+```{r Preprocess1,eval=FALSE}
 MSet.noob<- preprocessNoob(rgSet)
 ```
 
@@ -147,19 +150,20 @@ UnMethylatedOxBS <- getUnmeth(MSet.noob)[,c(7,8,2,4)]
 ```
 
 
-
  When only two methods are available, the default option of \Rfunction{MLML} function returns the exact constrained maximum likelihood estimates  using the the pool-adjacent-violators algorithm (PAVA) [@ayer1955].
+ 
 
-```{r,eval=FALSE}
+```{r MLML2Rexact1,eval=FALSE}
 results_exact <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
                       L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS)
 ```
 
 
+
 Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained with the option \verb|iterative=TRUE|. In this case, the default (or user specified) \verb|tol| is considered in the iterative method.
 
 
-```{r,eval=FALSE}
+```{r MLML2REM1,eval=FALSE}
 results_em <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
                    L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS,
                    iterative = TRUE)
@@ -171,9 +175,6 @@ all.equal(results_exact$hmC,results_em$hmC,scale=1)
 ```
 
 
-```{r echo=FALSE,eval=FALSE}
-load("../data-raw/example1/results_exact.rds")
-```
 
 ```{r plot,echo=FALSE,eval=FALSE}
 pdf(file="Real1_estimates.pdf",width=15,height=5)
@@ -188,13 +189,132 @@ dev.off()
 knitr::include_graphics("Real1_estimates.pdf") 
 ```
 
+## Publicly available data: TAB and BS methods
+
+We will use the dataset from @Thienpont2016, which consists of 24 DNA samples treated with TAB-BS and hybridized to the Infinium 450K array from newly diagnosed and untreated non-small-cell lung cancer patients (12 normoxic and 12 hypoxic tumours). The dataset is deposited under GEO accession number [GSE71398](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71398).
+
+Obtaining the data:
+```{r getData2,eval=FALSE}
+getGEOSuppFiles("GSE71398")
+untar("GSE71398/GSE71398_RAW.tar", exdir = "GSE71398/idat")
+
+list.files("GSE71398/idat", pattern = "idat")
+files <- list.files("GSE71398/idat", pattern = "idat.gz$", full = TRUE)
+sapply(files, gunzip, overwrite = TRUE)
+```
+
+Reading the \verb|.IDAT| files:
+```{r readData2,eval=FALSE}
+rgSet <- read.metharray.exp("GSE71398/idat")
+```
+
+
+
+The phenotype data is not yet available from the \Robject{rgSet}.
+```{r,eval=FALSE}
+pData(rgSet)
+```
+
+We need to correctly identify the 24 DNA samples: 12 normoxic and 12 hypoxic non-small-cell lung cancer. We also need the information about the conversion method used in each replicate: BS or TAB. We will access this information automatically from GEO:
+
+```{r getPheno2,eval=FALSE}
+if (!file.exists("GSE71398/GSE71398_series_matrix.txt.gz"))
+download.file(
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE71nnn/GSE71398/matrix/GSE71398_series_matrix.txt.gz",
+  "GSE71398/GSE71398_series_matrix.txt.gz")
+
+geoMat <- getGEO(filename="GSE71398/GSE71398_series_matrix.txt.gz",getGPL=FALSE)
+pD.all <- pData(geoMat)
+pD <- pD.all[, c("title", "geo_accession", "source_name_ch1")]
+pD$method <- sapply(pD$source_name_ch1,function(x) strsplit(as.character(x),",")[[1]][3]) 
+pD$group <- sapply(pD$source_name_ch1,function(x) strsplit(as.character(x),",")[[1]][2]) 
+pD$sample <- as.numeric(substr(as.character(pD$title),start=7,stop=8))
+```
+
+
+This phenotype data needs to be merged into the methylation data. The following commands guarantee we have the same replicate identifier in both datasets before merging.
+
+```{r,eval=FALSE}
+sampleNames(rgSet) <- sapply(sampleNames(rgSet),function(x)   strsplit(x,"_")[[1]][1])
+rownames(pD) <- as.character(pD$geo_accession)
+pD <- pD[sampleNames(rgSet),]
+pData(rgSet) <- as(pD,"DataFrame")
+rgSet
+```
+
+
+The input in the \Rfunction{MLML} funcion is  \Rclass{MethylSet}, which contains the methylated and unmethylated signals. We chose the function \Rfunction{preprocessNoob} [@noob] for background correction and construction of the \Rclass{MethylSet}.
+
+
+```{r preprocess2,eval=FALSE}
+MSet.noob<- preprocessNoob(rgSet)
+```
+
+
+We can now use \Rfunction{MLML} from the \CRANpkg{MLML2R} package.
+
+
+One needs to carefully check if the columns across the different input matrices represent the same replicate. In this example, all matrices have the samples consistently represented in the columns: sample 1 in the first column, sample 2 in the second, and so forth.
+
+```{r,eval=FALSE}
+BSindex <- which(pD$method == " BS-chip")
+TABindex <- which(pD$method == " TAB-chip")
+MethylatedBS <- getMeth(MSet.noob)[,BSindex]
+UnMethylatedBS <- getUnmeth(MSet.noob)[,BSindex]
+MethylatedTAB <- getMeth(MSet.noob)[,TABindex]
+UnMethylatedTAB <- getUnmeth(MSet.noob)[,TABindex]
+```
+
+
+ When only two methods are available, the default option of \Rfunction{MLML} function returns the exact constrained maximum likelihood estimates  using the the pool-adjacent-violators algorithm (PAVA) [@ayer1955].
+
+```{r,eval=FALSE}
+results_exact <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
+                      G.matrix = UnMethylatedTAB, H.matrix = MethylatedTAB)
+```
+
+
+Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained with the option \verb|iterative=TRUE|. In this case, the default (or user specified) \verb|tol| is considered in the iterative method.
+
+
+```{r MLML2REM2,eval=FALSE}
+results_em <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
+                   G.matrix = UnMethylatedTAB, H.matrix = MethylatedTAB,
+                   iterative = TRUE)
+```
+
+The estimates for 5-hmC proportions are very similar for both methods:
+```{r,echo=TRUE,eval=FALSE}
+all.equal(results_exact$hmC,results_em$hmC,scale=1)
+```
+
+The estimates for 5-mC proportions are very similar for both methods:
+```{r,echo=TRUE,eval=FALSE}
+all.equal(results_exact$mC,results_em$mC,scale=1)
+```
+
+
+
+```{r plot3,echo=FALSE,eval=FALSE}
+pdf(file="Real2_estimates.pdf",width=15,height=5)
+par(mfrow =c(1,3))
+densityPlot(results_exact$hmC,main= "5-hmC using PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group)
+densityPlot(results_exact$mC,main= "5-mC using PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group)
+densityPlot(results_exact$C,main= "5-C using PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group)
+dev.off()
+```
+
+```{r,echo=FALSE,fig.width=15,fig.height=5,fig.cap="Estimated proportions of hydroxymethylation, methylation and unmethylation for the CpGs in the dataset using the MLML function with default options."}
+knitr::include_graphics("Real2_estimates.pdf") 
+```
+
 
 ## Simulated data
 
 
 To illustrate the package when all the three methods are available or when any combination of only two of them are available, we will simulate a dataset. 
 
-We will use a sample of the estimates of 5-mC, 5-hmC and 5-C of the previous example as the true proportions, as shown in Figure 2.
+We will use a sample of the estimates of 5-mC, 5-hmC and 5-C of the previous oxBS+BS example as the true proportions, as shown in Figure 3.
 
 
 
@@ -209,15 +329,10 @@ $$G_{i,j}=c_{i,j}-H_{i,j}$$
 where the random variables are defined in Table 1, and $c_{i,j}$ represents the coverage for CpG $i$ in sample $j$.
 
 
-```{r echo=FALSE,eval=FALSE}
-load("../data-raw/example1/results_exact.rds")
-load("../data-raw/Input.rds")
-```
-
 
 The following code produce the simulated data:
 
-```{r,echo=TRUE,eval=FALSE}
+```{r simulation,echo=TRUE,eval=FALSE}
 set.seed(112017)
 
 index <- sample(1:dim(results_exact$mC)[1],1000,replace=FALSE) # 1000 CpGs
@@ -233,6 +348,7 @@ for (i in 1:dim(temp1)[1])
 {
   MethylatedBS_temp[i] <- rbinom(n=1, size=temp1$n[i], prob=(temp1$p_m[i]+temp1$p_h[i]))
 }
+
 
 UnMethylatedBS_sim2 <- matrix(Coverage - MethylatedBS_temp,ncol=2)
 MethylatedBS_sim2 <- matrix(MethylatedBS_temp,ncol=2)
@@ -408,15 +524,16 @@ Comparison between PAVA and EM:
  mbmOT1
 ```
 
-Comparison between approximate exact constrained and true hydroxymethylation proportion used in simulation:
+Comparison between approximate exact constrained and true 5-hmC proportion used in simulation:
 ```{r}
 all.equal(true_parameters_sim2$p_h,results_exactOT1$hmC[,1],scale=1)
 ```
 
-Comparison between EM-algorithm and true hydroxymethylation proportion used in simulation:
+Comparison between EM-algorithm and true 5-hmC proportion used in simulation:
 ```{r}
 all.equal(true_parameters_sim2$p_h,results_emOT1$hmC[,1],scale=1)
 ```
+
 
 ### BS, oxBS and TAB methods
 
@@ -446,7 +563,7 @@ We recommend the default option \Rcode{iterative=FALSE} since the difference in 
 ```
 
 
-```{r}
+```{r computationCost}
  mbmBOT1 = microbenchmark(
     EXACT = MLML(T.matrix = MethylatedBS_sim2, U.matrix = UnMethylatedBS_sim2,
                  L.matrix = UnMethylatedOxBS_sim2, M.matrix = MethylatedOxBS_sim2,
@@ -469,7 +586,6 @@ Comparison between EM-algorithm and true hydroxymethylation proportion used in s
 ```{r}
 all.equal(true_parameters_sim2$p_h,results_emBOT1$hmC[,1],scale=1)
 ```
-
 
 
 # References
