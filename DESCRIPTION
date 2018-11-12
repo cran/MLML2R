@@ -2,7 +2,7 @@ Package: MLML2R
 Type: Package
 Title: Maximum Likelihood Estimation of DNA Methylation and
         Hydroxymethylation Proportions
-Version: 0.3.0
+Version: 0.3.1
 Author: Samara Kiihl [aut, cre],
   Maria Jose Martinez-Garrido [aut],
   Arce Domingo-Relloso [aut],
@@ -24,9 +24,9 @@ biocViews: Software, MethylationArray, Epigenetics, DNAMethylation,
 RoxygenNote: 6.1.0
 URL: https://github.com/samarafk/MLML2R
 Suggests: minfi, microbenchmark, GEOquery, knitr, BiocStyle, rmarkdown,
-        wateRmelon, IlluminaHumanMethylation450kmanifest
+        IlluminaHumanMethylation450kmanifest
 BugReports: https://github.com/samarafk/MLML2R/issues
 NeedsCompilation: no
-Packaged: 2018-09-30 01:33:26 UTC; sfk
+Packaged: 2018-11-12 10:13:56 UTC; sfk
 Repository: CRAN
-Date/Publication: 2018-09-30 04:10:03 UTC
+Date/Publication: 2018-11-12 10:30:03 UTC

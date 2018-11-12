@@ -3,7 +3,7 @@ title: "MLML2R package User's Guide"
 shorttitle: "MLML2R"
 package: MLML2R
 abstract: >
-  We present a guide to the \R{} package \CRANpkg{MLML2R}. The package provides computational efficient maximum likelihood estimates of DNA methylation and hydroxymethylation proportions when data from the DNA processing methods bisulfite conversion (BS), oxidative bisulfite conversion (ox-BS), and Tet-assisted bisulfite conversion (TAB) are available. Estimates can be obtained when data from all the three methods are available or when any combination of only two of them are available. The package does not depend on other \R{} packages, allowing the user to read and preprocess the data with any given software, to import the results into \R{} in matrix format, to obtain the maximum likelihood 5-hmC and 5-mC estimates and use them as input for other packages traditionally used in genomic data analysis, such as \Biocpkg{minfi}, \Biocpkg{sva} and \Biocpkg{limma}.
+  We present a guide to the \R{} package \CRANpkg{MLML2R}. The package provides computationally efficient maximum likelihood estimates of DNA methylation and hydroxymethylation proportions when single nucleotide resolution data from the DNA processing methods bisulfite conversion (BS), oxidative bisulfite conversion (ox-BS), and Tet-assisted bisulfite conversion (TAB) are available. Estimates can be obtained by combining any two of the methods, or all the three methods (if available). The package does not depend on other \R{} packages, allowing the user to read and preprocess the data with any given software, to import the results into \R{} in matrix format, to obtain the maximum likelihood estimates for methylation and hydroxymethylation proportions and use them as input for other packages traditionally used in genomic data analysis, such as \Biocpkg{minfi}, \Biocpkg{sva} and \Biocpkg{limma}.
 bibliography: refs.bib
 author: "Samara F. Kiihl and Maria Tellez-Plaza"
 date: "`r Sys.Date()`"
@@ -31,25 +31,29 @@ BiocStyle::markdown()
 # Introduction
 
 
-In a given CpG site from a single cell we will either have a C or a T after DNA processing conversion methods, with a different interpretation for each of the available methods. This is a binary outcome and we assume a Binomial model and use the maximum likelihood estimation method to obtain the estimates for hydroxymethylation and methylation proportions.
+In a given CpG site from a single cell we will either have a C or a T after bisulfite-based DNA conversion methods. We asume a Binomial model and maximum likelihood estimation to obtain consistent hydroxymethylation and methylation proportions with single nucleotide resolution. \CRANpkg{MLML2R} package allows the user to jointly estimate hydroxymethylation and methylation consistently and efficiently.
 
-T reads are referred to as converted cytosine and C reads are referred to as unconverted cytosine. Conventionally, T counts are also referred to as unmethylated counts, and C counts as methylated counts. In case of Infinium Methylation arrays, we have intensities representing the methylated (M) and unmethylated (U) channels that are proportional to the number of unconverted and converted cytosines (C and T, respectively). The most used summary from these experiments is  the proportion $\beta=\frac{M}{M+U}$, commonly referred to as \textit{beta-value}, which reflects the methylation level at a CpG site. Naively using the difference between betas from BS and oxBS as an estimate of 5-hmC (hydroxymethylated cytosine), and the difference between betas from BS and TAB as an estimate of 5-mC (methylated cytosine) can many times provide negative proportions and instances where the sum of uC (unmodified cytosine), 5-mC and 5-hmC proportions is greater than one due.
+T reads are referred to as converted cytosine and C reads are referred to as unconverted cytosine. In case of Infinium Methylation arrays, we have intensities representing the unconverted (M) and converted (U) channels. The most used summary from these experiments is  the proportion $\beta=\frac{M}{M+U}$, commonly referred to as \textit{beta-value}. Naively using the difference between betas from BS and oxBS as an estimate of 5-hmC (hydroxymethylated cytosine), and the difference between betas from BS and TAB as an estimate of 5-mC (methylated cytosine) can many times provide negative proportions and instances where the sum of uC (unmodified cytosine), 5-mC and 5-hmC proportions is greater than one due.
 
-\CRANpkg{MLML2R} package allows the user to jointly estimate hydroxymethylation and methylation consistently and efficiently.
 
-The function \Rfunction{MLML} takes as input the data from the different methods and returns the estimated proportion of methylation, hydroxymethylation and unmethylation for a given CpG site. Table 1 presents the arguments of the \Rfunction{MLML} and Table 2 lists the results returned by the function.
 
-The function assumes that the order of the rows and columns in the input matrices are consistent. In addition, all the input matrices must have the same dimension. Usually, rows represent CpG loci and columns are the samples.
+The function \Rfunction{MLML} takes as input the data from the different bisulfite-based methods and returns the estimated proportion of methylation, hydroxymethylation and unmethylation for a given CpG site. Table 1 presents the arguments of the \Rfunction{MLML} and Table 2 lists the results returned by the function.
+
+The function assumes that the order of the samples by rows and columns in the input matrices is consistent. In addition, all the input matrices must have the same dimension. In the provided examples, rows represent CpG loci and columns represent samples. Nonetheless transposed matrices can also be supplied.
 
 Arguments           |       Description      
 --------------------|----------------------------------------------------
-\Robject{G.matrix}  | Unmethylated channel (Converted cytosines/ T counts) from  TAB-conversion (reflecting 5-C + 5-mC). 
-\Robject{H.matrix}  | Methylated channel (Unconverted cytosines/ C counts) from TAB-conversion (reflecting True 5-hmC). 
-\Robject{L.matrix}	| Unmethylated channel (Converted cytosines/ T counts) from oxBS-conversion (reflecting 5-C + 5-hmC). 
-\Robject{M.matrix}	| Methylated channel (Unconverted cytosines/ C counts) from  oxBS-conversion (reflecting True 5-mC). 
-\Robject{T.matrix}	| Methylated channel (Unconverted cytosines/ C counts) from  standard BS-conversion (reflecting 5-mC+5-hmC). 
-\Robject{U.matrix}	| Unmethylated channel (Converted cytosines/ T counts) from standard BS-conversion (reflecting True 5-C). 
+\Robject{U.matrix}	| Converted cytosines (T counts or U channel) from standard BS-conversion (reflecting True 5-C). 
+\Robject{T.matrix}	| Unconverted cytosines (C counts or M channel) from  standard BS-conversion (reflecting 5-mC+5-hmC). 
+\Robject{G.matrix}  | Converted cytosines (T counts or U channel) from TAB-conversion (reflecting 5-C + 5-mC). 
+\Robject{H.matrix}  | Unconverted cytosines (C counts or M channel) from TAB-conversion (reflecting True 5-hmC). 
+\Robject{L.matrix}	| Converted cytosines (T counts or U channel) from oxBS-conversion (reflecting 5-C + 5-hmC). 
+\Robject{M.matrix}	| Unconverted cytosines (C counts or M channel) from  oxBS-conversion (reflecting True 5-mC). 
+
 : `MLML` function and random variable notation.
+
+
+
 
 Value | Description
 ------|------------------
@@ -64,12 +68,13 @@ Value | Description
 
 ## Publicly available array data: oxBS and BS methods
 
-We will use the dataset from @10.1371/journal.pone.0118202, which consists of eight DNA samples from the same DNA source treated with oxBS-BS and hybridized to the Infinium 450K array.
+We will use the dataset from @10.1371/journal.pone.0118202, which consists of eight DNA samples from the same DNA source treated with oxBS and BS and hybridized to the Infinium 450K array.
 
-When data is obtained through Infinium Methylation arrays, we recommend the use of the \Biocpkg{minfi} package [@minfi], a well-established tool for reading, preprocessing and analysing DNA methylation data from these platforms. Although our example relies on \Biocpkg{minfi} and other \Bioconductor{} tools, \CRANpkg{MLML2R} does not depend on any packages. Thus, the user is free to read and preprocess the data using any software of preference and then import the intensities (or T and C counts) for the methylated and unmethylated channel (or converted and uncoverted cytosines) into \R{} in matrix format.
+When data is obtained through Infinium Methylation arrays, we recommend the use of the \Biocpkg{minfi} package [@minfi], a well-established tool for reading, preprocessing and analysing DNA methylation data from these platforms. Although our example relies on \Biocpkg{minfi} and other \Bioconductor{} tools, \CRANpkg{MLML2R} does not depend on any packages. Thus, the user is free to read and preprocess the data using any software of preference and then import into \R{} in matrix format the intensities from the M and U channels (or C and T counts from sequencing) reflecting unconverted and converted cytosines, respectively.
+
 
 To start this example we will need the following packages:
-```{r packages1,eval=TRUE,message=FALSE,warning=FALSE}
+```{r packages1,eval=FALSE,message=FALSE,warning=FALSE}
 library(MLML2R)
 library(minfi)
 library(GEOquery)
@@ -80,6 +85,7 @@ library(IlluminaHumanMethylation450kmanifest)
 It is usually best practice to start the analysis from the raw data, which in the case of the 450K array is a \verb|.IDAT| file.
 
 The raw files are deposited in GEO and can be downloaded by using the \Rfunction{getGEOSuppFiles}. There are two files for each replicate, since the 450k array is a two-color array. The \verb|.IDAT| files are downloaded in compressed format and need to be uncompressed before they are read by the \Rfunction{read.metharray.exp} function.
+
 
 ```{r getData1,eval=FALSE}
 getGEOSuppFiles("GSE63179")
@@ -130,24 +136,29 @@ pData(rgSet) <- as(pD,"DataFrame")
 rgSet
 ```
 
-The \Robject{rgSet} is an object from \Rclass{RGChannelSet} class used for two color data (green and red channels). The input in the \Rfunction{MLML} function are matrices with methylated and unmethylated information from each conversion method. We can use the \Rclass{MethylSet} class, which contains the methylated and unmethylated signals. The most basic way to construct a \Rclass{MethylSet} is  using the function \Rfunction{preprocessRaw}. Here we chose the function \Rfunction{preprocessNoob} [@noob] for background correction, dye bias normalization and construction of the \Rclass{MethylSet}.
+The \Robject{rgSet} is an object from \Rclass{RGChannelSet} class used for two color data (green and red channels). The input in the \Rfunction{MLML} function are matrices with methylated and unmethylated information from each conversion method. We can use the \Rclass{MethylSet} class, which contains the methylated and unmethylated signals. The most basic way to construct a \Rclass{MethylSet} is  using the function \Rfunction{preprocessRaw}. 
 
-
-```{r Preprocess1,eval=FALSE}
-MSet.noob<- preprocessNoob(rgSet)
-```
-
-
-After the preprocessed steps we can use \Rfunction{MLML} from the \CRANpkg{MLML2R} package.
-
+Here we chose the function \Rfunction{preprocessNoob} [@noob] for background correction, dye bias normalization and construction of the \Rclass{MethylSet}. We encourage the user to consider other normalization methods such as SWAN [@Maksimovic2012], BMIQ [@Teschendorff2012], RCP [@rcp], Funnorm [@funnorm], and others, as well as combination of some of these methods, as suggested by @Liu2016.
 
 The BS replicates are in columns 1, 3, 5, and 6 (information from `pD$title`). The remaining columns are from the oxBS treated replicates.
 
+
+```{r Preprocess1,eval=FALSE}
+BSindex <- c(1,3,5,6)
+oxBSindex <- c(7,8,2,4)
+
+MSet.noob <- preprocessNoob(rgSet=rgSet)
+```
+
+
+After the preprocessing steps we can use \Rfunction{MLML} from the \CRANpkg{MLML2R} package.
+
+
 ```{r,eval=FALSE}
-MethylatedBS <- getMeth(MSet.noob)[,c(1,3,5,6)]
-UnMethylatedBS <- getUnmeth(MSet.noob)[,c(1,3,5,6)]
-MethylatedOxBS <- getMeth(MSet.noob)[,c(7,8,2,4)]
-UnMethylatedOxBS <- getUnmeth(MSet.noob)[,c(7,8,2,4)]
+MChannelBS <- getMeth(MSet.noob)[,BSindex]
+UChannelBS <- getUnmeth(MSet.noob)[,BSindex]
+MChannelOxBS <- getMeth(MSet.noob)[,oxBSindex]
+UChannelOxBS <- getUnmeth(MSet.noob)[,oxBSindex]
 ```
 
 
@@ -155,8 +166,10 @@ UnMethylatedOxBS <- getUnmeth(MSet.noob)[,c(7,8,2,4)]
  
 
 ```{r MLML2Rexact1,eval=FALSE}
-results_exact <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
-                      L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS)
+results_exact <- MLML(T.matrix = MChannelBS , U.matrix = UChannelBS,
+                      L.matrix = UChannelOxBS, M.matrix = MChannelOxBS)
+
+save(results_exact,file="results_exact_oxBS.rds")
 ```
 
 
@@ -165,8 +178,8 @@ Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained wit
 
 
 ```{r MLML2REM1,eval=FALSE}
-results_em <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
-                   L.matrix = UnMethylatedOxBS, M.matrix = MethylatedOxBS,
+results_em <- MLML(T.matrix = MChannelBS , U.matrix = UChannelBS,
+                   L.matrix = UChannelOxBS, M.matrix = MChannelOxBS,
                    iterative = TRUE)
 ```
 
@@ -178,15 +191,25 @@ all.equal(results_exact$hmC,results_em$hmC,scale=1)
 
 
 ```{r plot,echo=FALSE,eval=FALSE}
-pdf(file="Real1_estimates.pdf",width=15,height=5)
-par(mfrow =c(1,3))
-densityPlot(results_exact$hmC,main= "5-hmC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
-densityPlot(results_exact$mC,main= "5-mC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
-densityPlot(results_exact$C,main= "uC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+beta_BS <- MChannelBS/(MChannelBS+UChannelBS)
+beta_OxBS <- MChannelOxBS/(MChannelOxBS+UChannelOxBS)
+hmC_naive <- beta_BS-beta_OxBS #5-hmC naive estimate
+C_naive <- 1-beta_BS #uC naive estimate
+mC_naive <- beta_OxBS #5-mC naive estimate
+
+pdf(file="Real1_estimates.pdf",width=15,height=10)
+par(mfrow =c(2,3))
+densityPlot(results_exact$hmC,main= "5-hmC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+densityPlot(results_exact$mC,main= "5-mC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+densityPlot(results_exact$C,main= "uC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+
+densityPlot(hmC_naive,main= "5-hmC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+densityPlot(mC_naive,main= "5-mC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
+densityPlot(C_naive,main= "uC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion")
 dev.off()
 ```
 
-```{r,echo=FALSE,fig.width=15,fig.height=5,fig.cap="Estimated proportions of hydroxymethylation, methylation and unmethylation for the CpGs in the dataset using the MLML function with default options."}
+```{r,echo=FALSE,fig.width=15,fig.height=10,fig.cap="Estimated proportions of 5-hmC, 5-mC and uC for the CpGs in the dataset from Field (2015) using the MLML function with default (PAVA) options (top row) and the naïve (subtraction) method (bottom row)."}
 knitr::include_graphics("Real1_estimates.pdf") 
 ```
 
@@ -195,12 +218,11 @@ knitr::include_graphics("Real1_estimates.pdf")
 We will use the dataset from @Thienpont2016, which consists of 24 DNA samples treated with TAB-BS and hybridized to the Infinium 450K array from newly diagnosed and untreated non-small-cell lung cancer patients (12 normoxic and 12 hypoxic tumours). The dataset is deposited under GEO accession number [GSE71398](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71398).
 
 We will need the following packages:
-```{r packages2,eval=TRUE,message=FALSE,warning=FALSE}
+```{r packages2,eval=FALSE,message=FALSE,warning=FALSE}
 library(MLML2R)
 library(minfi)
 library(GEOquery)
 library(IlluminaHumanMethylation450kmanifest)
-library(wateRmelon)
 ```
 
 Obtaining the data:
@@ -262,38 +284,30 @@ rgSet
 ```
 
 
-The input in the \Rfunction{MLML} function accepts as input a \Rclass{MethylSet}, which contains the methylated and unmethylated signals. We chose the function \Rfunction{preprocessNoob} [@noob] for background correction, dye-bias normalization and construction of the \Rclass{MethylSet}. In addition, the function \Rfunction{BMIQ} [@Teschendorff2012] from the package \Biocpkg{wateRmelon} [@Pidsley2013] was used for probe-type bias correction. A discussion of this preprocessing procedure is presented by @Liu2016.
+The following command produces a quality control report, which helps to identify failed samples:
+
+```{r,eval=FALSE}
+qcReport(rgSet, pdf= "qcReport_tab_bs.pdf")
+```
+
+After looking at the quality control report, we notice a problematic sample: GSM1833667. This sample and its corresponding pair in the TAB experiment, GSM1833691, were removed from subsequent analysis.
+
+The input in the \Rfunction{MLML} function accepts as input a \Rclass{MethylSet}, which contains the methylated and unmethylated signals. We used the function \Rfunction{preprocessNoob} [@noob] for background correction, dye bias normalization and construction of the \Rclass{MethylSet}.
+
 
 
 ```{r preprocess2,eval=FALSE}
-## Noob
-MSet.noob<- preprocessNoob(rgSet)
+BSindex <- which(pD$method=="BSchip")[-which(pD$geo_accession 
+                                             %in% c("GSM1833667","GSM1833691"))]
+TABindex <- which(pD$method=="TABchip")[-which(pD$geo_accession 
+                                               %in% c("GSM1833667","GSM1833691"))]   
 
-BSindex <- which(pD$method=="BSchip")
-TABindex <- which(pD$method=="TABchip")  
+MSet.noob <- preprocessNoob(rgSet)
 
-## BMIQ
-anno <- getAnnotation(MSet.noob)
-beta.b <- getBeta(MSet.noob, type = "Illumina")
-design.v <- as.vector(anno$Type)
-design.v[design.v == "I"] = 1
-design.v[design.v == "II"] = 2
-design.v <- as.numeric(design.v)
-coln = colnames(beta.b)
-
-beta.noob.bmiq <- BMIQ(beta.b, design.v = design.v,sampleID = 1:48)
-
-beta_BS <- beta.noob.bmiq$nbeta[,BSindex]
-beta_TAB <- beta.noob.bmiq$nbeta[,TABindex]
-
-# Total Signal = methylated + unmethylated
-TotalBS <- getMeth(MSet.noob[,BSindex]) + getUnmeth(MSet.noob[,BSindex])
-TotalTAB <- getMeth(MSet.noob[,TABindex]) + getUnmeth(MSet.noob[,TABindex])
-
-MethylatedBS <- beta_BS*TotalBS
-UnMethylatedBS <- (1-beta_BS)*TotalBS
-MethylatedTAB <- beta_TAB*TotalTAB
-UnMethylatedTAB <- (1-beta_TAB)*TotalTAB
+MChannelBS <- getMeth(MSet.noob)[,BSindex]
+UChannelBS <- getUnmeth(MSet.noob)[,BSindex]
+MChannelTAB <- getMeth(MSet.noob)[,TABindex]
+UChannelTAB <- getUnmeth(MSet.noob)[,TABindex]
 ```
 
 
@@ -302,11 +316,11 @@ We can now use \Rfunction{MLML} from the \CRANpkg{MLML2R} package.
 One needs to carefully check if the columns across the different input matrices represent the same sample. In this example, all matrices have the samples consistently represented in the columns: sample 1 in the first column, sample 2 in the second, and so forth.
 
 
- When only two methods are available, the default option of \Rfunction{MLML} function returns the exact constrained maximum likelihood estimates  using the the pool-adjacent-violators algorithm (PAVA) [@ayer1955].
+When any two of the methods are available, the default option of \Rfunction{MLML} function returns the exact constrained maximum likelihood estimates  using the the pool-adjacent-violators algorithm (PAVA) [@ayer1955].
 
 ```{r,eval=FALSE}
-results_exact <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
-                      G.matrix = UnMethylatedTAB, H.matrix = MethylatedTAB)
+results_exact <- MLML(T.matrix = MChannelBS , U.matrix = UChannelBS,
+                      G.matrix = UChannelTAB, H.matrix = MChannelTAB)
 ```
 
 
@@ -314,8 +328,8 @@ Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained wit
 
 
 ```{r MLML2REM2,eval=FALSE}
-results_em <- MLML(T.matrix = MethylatedBS , U.matrix = UnMethylatedBS,
-                   G.matrix = UnMethylatedTAB, H.matrix = MethylatedTAB,
+results_em <- MLML(T.matrix = MChannelBS , U.matrix = UChannelBS,
+                   G.matrix = UChannelTAB, H.matrix = MChannelTAB,
                    iterative = TRUE)
 ```
 
@@ -332,17 +346,187 @@ all.equal(results_exact$mC,results_em$mC,scale=1)
 
 
 ```{r plot3,echo=FALSE,eval=FALSE}
-pdf(file="Real2a_estimates.pdf",width=15,height=5)
-par(mfrow =c(1,3))
-densityPlot(results_exact$hmC,main= "5-hmC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
-densityPlot(results_exact$mC,main= "5-mC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
-densityPlot(results_exact$C,main= "uC estimates - PAVA",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+beta_BS <- MChannelBS/(MChannelBS+UChannelBS)
+beta_TAB <- MChannelTAB/(MChannelTAB+UChannelTAB)
+hmC_naive <- beta_TAB #5-hmC naive estimate
+C_naive <- 1-beta_BS #uC naive estimate
+mC_naive <- beta_BS-beta_TAB #5-mC naive estimate
+
+pdf(file="Real2a_estimates.pdf",width=15,height=10)
+par(mfrow =c(2,3))
+densityPlot(results_exact$hmC,main= "5-hmC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+densityPlot(results_exact$mC,main= "5-mC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+densityPlot(results_exact$C,main= "uC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+
+densityPlot(hmC_naive,main= "5-hmC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+densityPlot(mC_naive,main= "5-mC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
+densityPlot(C_naive,main= "uC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=pD$group[BSindex])
 dev.off()
 ```
 
-```{r,echo=FALSE,fig.width=15,fig.height=5,fig.cap="Estimated proportions of hydroxymethylation, methylation and unmethylation for the CpGs in the dataset using the MLML function with default options."}
+```{r,echo=FALSE,fig.width=15,fig.height=10,fig.cap="Estimated proportions of 5-hmC, 5-mC and uC for the CpGs in the dataset from Thienpont et al (2016), using the MLML function with default (PAVA) options (top row) and the naïve (subtraction) method (bottom row)."}
 knitr::include_graphics("Real2a_estimates.pdf") 
 ```
+
+## Publicly available sequencing data: oxBS and BS methods
+
+We will use the dataset from @Li2016, which consists of three human lung normal-tumor pairs (six samples). Each sample was divided into two replicates: one treated with BS and the other with oxBS, which were then sequenced using the Illumina HiSeq 2000 (Homo sapiens) platform. The preprocessed dataset is available at GEO accession [GSE70090](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE70090). The details of the preprocessing procedures are described in @Li2016.
+
+Obtaining the data:
+```{r,echo=TRUE,eval=FALSE}
+library(GEOquery)
+
+getGEOSuppFiles("GSE70090")
+untar("GSE70090/GSE70090_RAW.tar", exdir = "GSE70090/data")
+```
+
+Decompressing the files:
+
+```{r,echo=TRUE,eval=FALSE}
+dataFiles <- list.files("GSE70090/data", pattern = "txt.gz$", full = TRUE)
+sapply(dataFiles, gunzip, overwrite = TRUE)
+```
+
+
+
+We need to identify the different samples from different methods (BS-conversion, oxBS-conversion), we will use the file names do extract this information.
+
+```{r,echo=TRUE,eval=FALSE}
+files <- list.files("GSE70090/data")
+filesfull <- list.files("GSE70090/data",full=TRUE)
+tissue <- sapply(files,function(x) strsplit(x,"_")[[1]][2]) # tissue
+id <- sapply(files,function(x) strsplit(x,"_")[[1]][3]) # sample id
+tmp <- sapply(files,function(x) strsplit(x,"_")[[1]][4]) 
+convMeth <- sapply(tmp, function(x) strsplit(x,"\\.")[[1]][1]) # DNA conversion method
+group <- ifelse(id %in% c("N1","N2","N3","N4"),"normal","tumor")
+id2 <- paste(tissue,id,sep="_")
+GSM <- sapply(files,function(x) strsplit(x,"_")[[1]][1]) # GSM
+pheno <- data.frame(GSM=GSM,tissue=tissue,id=id2,convMeth=convMeth,
+                    group=group,file=filesfull,stringsAsFactors = FALSE)
+```
+
+Selecting only the three human lung normal-tumor pairs:
+
+```{r,echo=TRUE,eval=FALSE}
+library(data.table)
+
+phenoLung <- pheno[pheno$tissue=="lung",]
+
+# order to have all BS samples and then all oxBS samples
+phenoLung <- phenoLung[order(phenoLung$convMeth,phenoLung$id),]
+```
+
+Preparing the data for input in the \Rfunction{MLML} function:
+
+```{r,echo=TRUE,eval=FALSE}
+### BS
+files <- phenoLung$file[phenoLung$convMeth=="BS"]
+C_BS    <- do.call(cbind,lapply(files,function(fn) 
+  fread(fn,data.table=FALSE,select=c("methylated_read_count"))))
+TotalBS    <- do.call(cbind,lapply(files,function(fn) 
+  fread(fn,data.table=FALSE,select=c("total_read_count"))))
+T_BS <- TotalBS - C_BS
+
+
+### oxBS
+files <- phenoLung$file[phenoLung$convMeth=="oxBS"]
+C_OxBS    <- do.call(cbind,lapply(files,function(fn) 
+  fread(fn,data.table=FALSE,select=c("methylated_read_count"))))
+TotalOxBS    <- do.call(cbind,lapply(files,function(fn) 
+  fread(fn,data.table=FALSE,select=c("total_read_count"))))
+T_OxBS <- TotalOxBS - C_OxBS
+
+# since rownames and colnames are the same across files:
+tmp <- fread(files[1], data.table=FALSE, select=c("chr","position"))
+CpG <- paste(tmp[,1],tmp[,2],sep="-")
+
+rownames(C_BS) <- CpG 
+rownames(T_BS) <- CpG
+
+colnames(C_BS) <- phenoLung$id[phenoLung$convMeth=="BS"]
+colnames(T_BS) <- phenoLung$id[phenoLung$convMeth=="BS"]
+
+rownames(C_OxBS) <- CpG 
+rownames(T_OxBS) <- CpG
+
+colnames(C_OxBS) <- phenoLung$id[phenoLung$convMeth=="oxBS"]
+colnames(T_OxBS) <- phenoLung$id[phenoLung$convMeth=="oxBS"]
+
+Tm = as.matrix(C_BS)
+Um = as.matrix(T_BS)
+Lm = as.matrix(T_OxBS)
+Mm = as.matrix(C_OxBS)
+```
+
+Only CpGs with coverage of at least 10 across all samples and all conversion procedures (BS and oxBS) were considered in the following results ($7685557$ CpGs).
+
+```{r,echo=TRUE,eval=FALSE}
+TotalBS <- Tm+Um
+TotalOxBS <- Lm+Mm
+
+library(matrixStats) 
+
+tmp1 <- rowMins(TotalBS,na.rm=TRUE) # minimum coverage across samples from BS for each CpG
+tmp2 <- rowMins(TotalOxBS,na.rm=TRUE) # minimum coverage across samples from oxBS for each CpG
+
+aa <-which(tmp1>=10 & tmp2>=10) 
+# CpGs with coverage at least 10 across all samples for both methods (BS and oxBS)
+length(aa)
+```
+
+We can now use \Rfunction{MLML} from the \CRANpkg{MLML2R} package.
+
+
+```{r,echo=TRUE,eval=FALSE}
+library(MLML2R)
+
+results_exact <- MLML(T.matrix = Tm[aa,], 
+        U.matrix = Um[aa,], 
+        L.matrix = Lm[aa,], 
+        M.matrix = Mm[aa,])
+
+results_em <- MLML(T.matrix = Tm[aa,],
+        U.matrix = Um[aa,],
+        L.matrix = Lm[aa,],
+        M.matrix = Mm[aa,],
+        iterative = TRUE)
+```
+
+Comparing the estimates for 5-hmC proportions from iterative and non iterative option from \Rfunction{MLML} function:
+```{r,echo=TRUE,eval=FALSE}
+all.equal(results_exact$hmC,results_em$hmC,scale=1)
+```
+
+The estimates for 5-mC proportions are also very similar for both methods:
+```{r,echo=TRUE,eval=FALSE}
+all.equal(results_exact$mC,results_em$mC,scale=1)
+```
+
+
+```{r,echo=FALSE,eval=FALSE}
+beta_BS <- Tm/TotalBS
+beta_OxBS <- Mm/TotalOxBS
+hmC_naive <- beta_BS-beta_OxBS
+C_naive <- 1-beta_BS
+mC_naive <- beta_OxBS
+
+library(minfi)
+pdf(file="Real3a_estimates.pdf",width=15,height=10)
+par(mfrow =c(2,3))
+densityPlot(results_exact$hmC,main= "5-hmC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+densityPlot(results_exact$mC,main= "5-mC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+densityPlot(results_exact$C,main= "uC estimates - MLML2R",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+
+densityPlot(hmC_naive[aa,],main= "5-hmC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+densityPlot(mC_naive[aa,],main= "5-mC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+densityPlot(C_naive[aa,],main= "uC estimates - Naïve",cex.axis=1.4,cex.main=1.5,cex.lab=1.4,xlab="Proportion",sampGroups=phenoLung$group[1:6])
+dev.off()
+```
+
+```{r,echo=FALSE,fig.width=15,fig.height=10,fig.cap="Estimated proportions of 5-hmC, 5-mC and uC for the CpGs in the dataset from Li et al (2016) using the MLML function with default options (top row) and the naïve method (bottom row)."}
+knitr::include_graphics("Real3a_estimates.pdf") 
+```
+
 
 
 ## Simulated data
@@ -350,7 +534,7 @@ knitr::include_graphics("Real2a_estimates.pdf")
 
 To illustrate the package when all the three methods are available or when any combination of only two of them are available, we will simulate a dataset. 
 
-We will use a sample of the estimates of 5-mC, 5-hmC and uC of the previous oxBS+BS example as the true proportions, as shown in Figure 3.
+We will use a sample of the estimates of 5-mC, 5-hmC and uC of the previous oxBS+BS array example shown in Section 2.1 as the true proportions, as shown in Figure 4.
 
 
 
@@ -369,11 +553,13 @@ where the random variables are defined in Table 1, and $c_{i,j}$ represents the 
 The following code produce the simulated data:
 
 ```{r simulation,echo=TRUE,eval=FALSE}
+load("results_exact_oxBS.rds") # load estimates from previous example
+
 set.seed(112017)
 
 index <- sample(1:dim(results_exact$mC)[1],1000,replace=FALSE) # 1000 CpGs
 
-Coverage <- round(MethylatedBS+UnMethylatedBS)[index,1:2] # considering 2 samples
+Coverage <- round(MChannelBS+UChannelBS)[index,1:2] # considering 2 samples
 
 temp1 <- data.frame(n=as.vector(Coverage),
                     p_m=c(results_exact$mC[index,1],
@@ -381,37 +567,37 @@ temp1 <- data.frame(n=as.vector(Coverage),
                     p_h=c(results_exact$hmC[index,1],
                           results_exact$hmC[index,1]))
 
-MethylatedBS_temp <- c()
+MChannelBS_temp <- c()
 for (i in 1:dim(temp1)[1])
 {
-  MethylatedBS_temp[i] <- rbinom(n=1, size=temp1$n[i], 
+  MChannelBS_temp[i] <- rbinom(n=1, size=temp1$n[i], 
                                  prob=(temp1$p_m[i]+temp1$p_h[i]))
 }
 
 
-UnMethylatedBS_sim2 <- matrix(Coverage - MethylatedBS_temp,ncol=2)
-MethylatedBS_sim2 <- matrix(MethylatedBS_temp,ncol=2)
+UChannelBS_sim2 <- matrix(Coverage - MChannelBS_temp,ncol=2)
+MChannelBS_sim2 <- matrix(MChannelBS_temp,ncol=2)
 
 
-MethylatedOxBS_temp <- c()
+MChannelOxBS_temp <- c()
 for (i in 1:dim(temp1)[1])
 {
-  MethylatedOxBS_temp[i] <- rbinom(n=1, size=temp1$n[i], prob=temp1$p_m[i])
+  MChannelOxBS_temp[i] <- rbinom(n=1, size=temp1$n[i], prob=temp1$p_m[i])
 }
 
-UnMethylatedOxBS_sim2 <- matrix(Coverage - MethylatedOxBS_temp,ncol=2)
-MethylatedOxBS_sim2 <- matrix(MethylatedOxBS_temp,ncol=2)
+UChannelOxBS_sim2 <- matrix(Coverage - MChannelOxBS_temp,ncol=2)
+MChannelOxBS_sim2 <- matrix(MChannelOxBS_temp,ncol=2)
 
 
-MethylatedTAB_temp <- c()
+MChannelTAB_temp <- c()
 for (i in 1:dim(temp1)[1])
 {
-  MethylatedTAB_temp[i] <- rbinom(n=1, size=temp1$n[i], prob=temp1$p_h[i])
+  MChannelTAB_temp[i] <- rbinom(n=1, size=temp1$n[i], prob=temp1$p_h[i])
 }
 
 
-UnMethylatedTAB_sim2 <- matrix(Coverage - MethylatedTAB_temp,ncol=2)
-MethylatedTAB_sim2 <- matrix(MethylatedTAB_temp,ncol=2)
+UChannelTAB_sim2 <- matrix(Coverage - MChannelTAB_temp,ncol=2)
+MChannelTAB_sim2 <- matrix(MChannelTAB_temp,ncol=2)
 
 true_parameters_sim2 <- data.frame(p_m=results_exact$mC[index,1],
                                    p_h=results_exact$hmC[index,1])
@@ -420,7 +606,7 @@ true_parameters_sim2$p_u <- 1-true_parameters_sim2$p_m-true_parameters_sim2$p_h
 
 
 ```{r eval=FALSE,echo=FALSE}
-save(true_parameters_sim2,MethylatedBS_sim2,UnMethylatedBS_sim2,MethylatedOxBS_sim2,UnMethylatedOxBS_sim2,MethylatedTAB_sim2,UnMethylatedTAB_sim2,file="Data_sim2.rds")
+save(true_parameters_sim2,MChannelBS_sim2,UChannelBS_sim2,MChannelOxBS_sim2,UChannelOxBS_sim2,MChannelTAB_sim2,UChannelTAB_sim2,file="Data_sim2.rds")
 ```
 
 
@@ -451,19 +637,19 @@ When only two methods are available, the default option returns the exact constr
 
 ```{r}
 library(MLML2R)
- results_exactBO1 <- MLML(T.matrix = MethylatedBS_sim2 , 
-                          U.matrix = UnMethylatedBS_sim2,
-                          L.matrix = UnMethylatedOxBS_sim2, 
-                          M.matrix = MethylatedOxBS_sim2)
+ results_exactBO1 <- MLML(T.matrix = MChannelBS_sim2, 
+                          U.matrix = UChannelBS_sim2,
+                          L.matrix = UChannelOxBS_sim2, 
+                          M.matrix = MChannelOxBS_sim2)
 ```
 
 Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained with the option \verb|iterative=TRUE|. In this case, the default (or user specified) \verb|tol| is considered in the iterative method.
 
 ```{r}
- results_emBO1 <- MLML(T.matrix = MethylatedBS_sim2, 
-                       U.matrix = UnMethylatedBS_sim2,
-                       L.matrix = UnMethylatedOxBS_sim2, 
-                       M.matrix = MethylatedOxBS_sim2,
+ results_emBO1 <- MLML(T.matrix = MChannelBS_sim2, 
+                       U.matrix = UChannelBS_sim2,
+                       L.matrix = UChannelOxBS_sim2, 
+                       M.matrix = MChannelOxBS_sim2,
                        iterative=TRUE)
 ```
 
@@ -476,14 +662,14 @@ Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained wit
 ```{r}
  library(microbenchmark)
  mbmBO1 = microbenchmark(
-    EXACT = MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2),
-    EM =    MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2,
+    EXACT = MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2),
+    EM =    MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2,
                  iterative=TRUE),
     times=10)
  mbmBO1
@@ -504,18 +690,18 @@ all.equal(true_parameters_sim2$p_h,results_emBO1$hmC[,1],scale=1)
 
 Using PAVA:
 ```{r}
-results_exactBT1 <- MLML(T.matrix = MethylatedBS_sim2, 
-                         U.matrix = UnMethylatedBS_sim2,
-                         G.matrix = UnMethylatedTAB_sim2, 
-                         H.matrix = MethylatedTAB_sim2)
+results_exactBT1 <- MLML(T.matrix = MChannelBS_sim2, 
+                         U.matrix = UChannelBS_sim2,
+                         G.matrix = UChannelTAB_sim2, 
+                         H.matrix = MChannelTAB_sim2)
 ```
 
 Using EM-algorithm:
 ```{r}
- results_emBT1 <- MLML(T.matrix = MethylatedBS_sim2, 
-                       U.matrix = UnMethylatedBS_sim2,
-                       G.matrix = UnMethylatedTAB_sim2, 
-                       H.matrix = MethylatedTAB_sim2,
+ results_emBT1 <- MLML(T.matrix = MChannelBS_sim2, 
+                       U.matrix = UChannelBS_sim2,
+                       G.matrix = UChannelTAB_sim2, 
+                       H.matrix = MChannelTAB_sim2,
                        iterative=TRUE)
 ```
 
@@ -527,14 +713,14 @@ Comparison between PAVA and EM:
 
 ```{r}
  mbmBT1 = microbenchmark(
-    EXACT = MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2),
-    EM =    MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2,
+    EXACT = MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2),
+    EM =    MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2,
                  iterative=TRUE),
     times=10)
  mbmBT1
@@ -555,18 +741,18 @@ all.equal(true_parameters_sim2$p_h,results_emBT1$hmC[,1],scale=1)
 
  Using PAVA:
 ```{r}
- results_exactOT1 <- MLML(L.matrix = UnMethylatedOxBS_sim2, 
-                          M.matrix = MethylatedOxBS_sim2,
-                          G.matrix = UnMethylatedTAB_sim2, 
-                          H.matrix = MethylatedTAB_sim2)
+ results_exactOT1 <- MLML(L.matrix = UChannelOxBS_sim2, 
+                          M.matrix = MChannelOxBS_sim2,
+                          G.matrix = UChannelTAB_sim2, 
+                          H.matrix = MChannelTAB_sim2)
 ```
 
  Using EM-algorithm:
 ```{r}
- results_emOT1 <- MLML(L.matrix = UnMethylatedOxBS_sim2, 
-                       M.matrix = MethylatedOxBS_sim2,
-                       G.matrix = UnMethylatedTAB_sim2, 
-                       H.matrix = MethylatedTAB_sim2,
+ results_emOT1 <- MLML(L.matrix = UChannelOxBS_sim2, 
+                       M.matrix = MChannelOxBS_sim2,
+                       G.matrix = UChannelTAB_sim2, 
+                       H.matrix = MChannelTAB_sim2,
                        iterative=TRUE)
 ```
 
@@ -578,14 +764,14 @@ Comparison between PAVA and EM:
 
 ```{r}
  mbmOT1 = microbenchmark(
-    EXACT = MLML(L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2),
-    EM =    MLML(L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2,
+    EXACT = MLML(L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2),
+    EM =    MLML(L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2,
                  iterative=TRUE),
     times=10)
  mbmOT1
@@ -609,23 +795,23 @@ When data from the three methods are available, the default otion in the \Rfunct
 
 ```{r}
 
-results_exactBOT1 <- MLML(T.matrix = MethylatedBS_sim2, 
-                          U.matrix = UnMethylatedBS_sim2,
-                          L.matrix = UnMethylatedOxBS_sim2, 
-                          M.matrix = MethylatedOxBS_sim2,
-                          G.matrix = UnMethylatedTAB_sim2, 
-                          H.matrix = MethylatedTAB_sim2)
+results_exactBOT1 <- MLML(T.matrix = MChannelBS_sim2, 
+                          U.matrix = UChannelBS_sim2,
+                          L.matrix = UChannelOxBS_sim2, 
+                          M.matrix = MChannelOxBS_sim2,
+                          G.matrix = UChannelTAB_sim2, 
+                          H.matrix = MChannelTAB_sim2)
 ```
 
 Maximum likelihood estimate via EM-algorithm approach [@Qu:MLML] is obtained with the option \verb|iterative=TRUE|. In this case, the default (or user specified) \verb|tol| is considered in the iterative method.
 
 ```{r}
- results_emBOT1 <- MLML(T.matrix = MethylatedBS_sim2, 
-                        U.matrix = UnMethylatedBS_sim2,
-                        L.matrix = UnMethylatedOxBS_sim2, 
-                        M.matrix = MethylatedOxBS_sim2,
-                        G.matrix = UnMethylatedTAB_sim2, 
-                        H.matrix = MethylatedTAB_sim2,iterative=TRUE)
+ results_emBOT1 <- MLML(T.matrix = MChannelBS_sim2, 
+                        U.matrix = UChannelBS_sim2,
+                        L.matrix = UChannelOxBS_sim2, 
+                        M.matrix = MChannelOxBS_sim2,
+                        G.matrix = UChannelTAB_sim2, 
+                        H.matrix = MChannelTAB_sim2,iterative=TRUE)
 ```
 
 
@@ -638,18 +824,18 @@ We recommend the default option \Rcode{iterative=FALSE} since the difference in 
 
 ```{r computationCost}
  mbmBOT1 = microbenchmark(
-    EXACT = MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2),
-    EM =    MLML(T.matrix = MethylatedBS_sim2, 
-                 U.matrix = UnMethylatedBS_sim2,
-                 L.matrix = UnMethylatedOxBS_sim2, 
-                 M.matrix = MethylatedOxBS_sim2,
-                 G.matrix = UnMethylatedTAB_sim2, 
-                 H.matrix = MethylatedTAB_sim2,
+    EXACT = MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2),
+    EM =    MLML(T.matrix = MChannelBS_sim2, 
+                 U.matrix = UChannelBS_sim2,
+                 L.matrix = UChannelOxBS_sim2, 
+                 M.matrix = MChannelOxBS_sim2,
+                 G.matrix = UChannelTAB_sim2, 
+                 H.matrix = MChannelTAB_sim2,
                  iterative=TRUE),
     times=10)
  mbmBOT1
