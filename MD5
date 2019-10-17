@@ -1,9 +1,9 @@
-4f38959c1318e5e94d33235759a771a4 *DESCRIPTION
+f943e964d886447bc9eb3835464782f6 *DESCRIPTION
 d9dd8e64f615ada75b05d1223e7508f3 *LICENSE
 8b54e5a89fbda3af5e077053d40bec76 *NAMESPACE
 fdcd62da1cc29009650d1dc1a1d42329 *R/MLML.R
 192691ac70b3fc1004228dc6cca51391 *R/data.R
-209a6bc99d4ba8901301e22ce2715f49 *build/vignette.rds
+ac2b8600caae32faf6c01e40e4b5ac19 *build/vignette.rds
 377a44a0591b07c72b05dcf1df8ba9d1 *data/C_BS_sim.rda
 9d9a72ec32cb4b9c89bbfdd16eeb09f3 *data/C_OxBS_sim.rda
 d5eea391343cd35c2c4cf158365613b9 *data/C_TAB_sim.rda
@@ -11,9 +11,9 @@ ba740322c42433646b3ba04643e99158 *data/T_BS_sim.rda
 66a1e44d9de9205089086c521cf824c5 *data/T_OxBS_sim.rda
 3935e7031ea2e44e08649f307da045c6 *data/T_TAB_sim.rda
 ac7c317255b95dc09cf1b563f7254383 *inst/CITATION
-a8d304552a34add5cf0451baa5b695f3 *inst/doc/vignette.R
-8de3135acbd5bd41cc1acce732b9ef81 *inst/doc/vignette.Rmd
-ee5d0b362e22b52108302ea5d07ba7d2 *inst/doc/vignette.pdf
+3dd76fc9eb15872d8d5264304719223c *inst/doc/vignette.R
+67b63876085dbee82b10987466027651 *inst/doc/vignette.Rmd
+2b56fd53b5e7f2009dc871a4476175e0 *inst/doc/vignette.html
 2cb52ca7b5456e1f32cdf9a0d34e20f0 *man/C_BS_sim.Rd
 ba853100c86b042176b37ba60bbf6c90 *man/C_OxBS_sim.Rd
 37604d6c4b40c00003ff21489155188e *man/C_TAB_sim.Rd
@@ -27,5 +27,4 @@ f5442ade71af7fa76fb7f1a2d001a521 *man/T_TAB_sim.Rd
 50860125a09232cf27ce8eeafd844d8b *vignettes/Real3a_estimates.pdf
 4875428446279f77fa0ba1d26d8c4fbb *vignettes/True_parameters.pdf
 5361a6b517724f3efb0eda1540fdc02d *vignettes/refs.bib
-8de3135acbd5bd41cc1acce732b9ef81 *vignettes/vignette.Rmd
-20f4ab8a263a6a8b7bc6b88cb84e115f *vignettes/vignette.html
+67b63876085dbee82b10987466027651 *vignettes/vignette.Rmd

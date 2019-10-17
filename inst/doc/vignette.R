@@ -4,9 +4,6 @@
 #    comment = "#>"
 #  )
 
-## ----style, echo = FALSE, results = 'asis'-------------------------------
-BiocStyle::markdown()
-
 ## ----packages1,eval=FALSE,message=FALSE,warning=FALSE--------------------
 #  library(MLML2R)
 #  library(minfi)
